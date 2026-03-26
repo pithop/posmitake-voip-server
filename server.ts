@@ -31,6 +31,7 @@ wss.on('connection', (ws: WebSocket) => {
                 case 'offer':
                 case 'answer':
                 case 'ice-candidate':
+                case 'bye':
                     if (data.target && clients.has(data.target)) {
                         console.log(`🔄 Relaying ${data.type} from ${clientId} to ${data.target}`);
                         const targetWs = clients.get(data.target)!;
