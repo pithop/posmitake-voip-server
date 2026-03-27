@@ -70,12 +70,13 @@ wss.on('connection', (ws: WebSocket) => {
                     if (data.id) {
                         const newId = String(data.id);
 
-                        // Si un ancien socket avec ce même ID existe, on le ferme proprement
-                        // (cas d'un reload de page ou reconnexion après coupure réseau)
+                        // Si un ancien socket avec ce même ID existe, on le remplace silencieusement.
+                        // CRITIQUE : on n'appelle PAS old.ws.close() — cela enverrait un close frame
+                        // au client, qui déclencherait onclose → scheduleReconnect → nouvelle connexion
+                        // → re-registration → close à nouveau → boucle infinie de reconnexion.
+                        // Le heartbeat ping/pong s'occupera de purger les zombies naturellement.
                         if (clients.has(newId)) {
-                            const old = clients.get(newId)!;
-                            console.log(`♻️  Re-registration of ${newId}, closing old socket.`);
-                            try { old.ws.close(); } catch (_) {}
+                            console.log(`♻️  Re-registration of ${newId}, replacing silently.`);
                             clients.delete(newId);
                         }
 
